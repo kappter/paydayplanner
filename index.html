@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Until Next Payday</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #upload-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #file-input {
+            margin: 10px 0;
+        }
+        #result {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        #included-bills {
+            list-style-type: none;
+            padding: 0;
+        }
+        #included-bills li {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        .bill-title {
+            font-weight: bold;
+        }
+        .bill-amount {
+            float: right;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>Budget Until Next Payday</h1>
+    <div id="upload-section">
+        <label for="file-input">Upload your CSV file:</label><br>
+        <input type="file" id="file-input" accept=".csv">
+    </div>
+    <div id="result" style="display: none;">
+        <p>Next payday: <span id="next-payday"></span></p>
+        <p>Total amount required until next payday: $<span id="total-amount"></span></p>
+        <h2>Included Bills:</h2>
+        <ul id="included-bills"></ul>
+    </div>
+
+    <script>
+        document.getElementById('file-input').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvText = e.target.result;
+                const bills = parseCSV(csvText);
+                calculateAndDisplay(bills);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const bills = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length < 4) continue;
+
+                const bill = {
+                    title: values[0],
+                    description: values[1],
+                    amount: parseFloat(values[2]),
+                    day: parseInt(values[3])
+                };
+
+                if (!isNaN(bill.amount) && !isNaN(bill.day) && bill.day >= 1 && bill.day <= 31) {
+                    bills.push(bill);
+                }
+            }
+
+            return bills;
+        }
+
+        function calculateAndDisplay(bills) {
+            const now = new Date();
+            const currentDay = now.getDate();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            let nextPayDay, nextPayMonth = currentMonth, nextPayYear = currentYear;
+            if (currentDay < 15) {
+                nextPayDay = 15;
+            } else {
+                nextPayDay = 1;
+                nextPayMonth++;
+                if (nextPayMonth > 11) {
+                    nextPayMonth = 0;
+                    nextPayYear++;
+                }
+            }
+
+            const nextPayDate = new Date(nextPayYear, nextPayMonth, nextPayDay);
+
+            let total = 0;
+            const includedBills = [];
+
+            bills.forEach(bill => {
+                let dueYear = currentYear;
+                let dueMonth = currentMonth;
+                if (bill.day <= currentDay) {
+                    dueMonth++;
+                    if (dueMonth > 11) {
+                        dueMonth = 0;
+                        dueYear++;
+                    }
+                }
+
+                let dueDate = new Date(dueYear, dueMonth, bill.day);
+
+                // Handle if day overflows (e.g., Feb 30 -> Mar 2), but for simplicity, we let JS handle it
+
+                if (dueDate < nextPayDate && dueDate > now) {  // Ensure it's future and before next pay
+                    total += bill.amount;
+                    includedBills.push(bill);
+                }
+            });
+
+            displayResults(nextPayDate, total, includedBills);
+        }
+
+        function displayResults(nextPayDate, total, includedBills) {
+            document.getElementById('next-payday').textContent = nextPayDate.toDateString();
+            document.getElementById('total-amount').textContent = total.toFixed(2);
+
+            const list = document.getElementById('included-bills');
+            list.innerHTML = '';
+            includedBills.forEach(bill => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="bill-title">${bill.title}</span>
+                    <span class="bill-description"> - ${bill.description}</span>
+                    <span class="bill-amount">$${bill.amount.toFixed(2)}</span>
+                `;
+                list.appendChild(li);
+            });
+
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
