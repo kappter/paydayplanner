@@ -26,6 +26,11 @@
             text-align: center;
             margin-bottom: 20px;
         }
+        #budget-select {
+            margin: 10px 0;
+            padding: 8px;
+            width: 200px;
+        }
         #file-input {
             margin: 10px 0;
         }
@@ -63,7 +68,13 @@
     <h1>Payday Planner</h1>
     <p id="header-text"></p>
     <div id="upload-section">
-        <label for="file-input">Upload a different CSV file (defaults to sample budget):</label><br>
+        <label for="budget-select">Select a sample budget:</label><br>
+        <select id="budget-select">
+            <option value="low">Low-Income Family Sample</option>
+            <option value="middle" selected>Middle-Class Family Sample</option>
+            <option value="upper">Upper Middle-Class Family Sample</option>
+        </select><br>
+        <label for="file-input">Or upload your own CSV file:</label><br>
         <input type="file" id="file-input" accept=".csv">
     </div>
     <div id="result" style="display: none;">
@@ -74,26 +85,140 @@
     </div>
 
     <script>
-        // Default CSV content (kjk.csv equivalent)
-        const defaultCsv = `title,description,amount,day
-Rent,Monthly apartment rent,1500,1
-Home Insurance,Homeowners insurance,120,5
-Car Insurance,Auto insurance premium,100,15
-Phone Bill,Cell phone service,80,10
-Internet Bill,Home internet service,60,12
-Electricity Bill,Electric utility,150,20
-Water Bill,Water and sewer utility,50,25
-Cable TV,Cable television subscription,90,8
-Credit Card Payment,Minimum credit card payment,200,28
-Student Loan,Monthly student loan payment,300,3
-Gym Membership,Gym membership fee,40,7
-Streaming Services,Netflix and other subscriptions,30,18`;
+        // Sample CSV contents
+        const lowIncomeCsv = `title,description,amount,day
+Rent,Monthly apartment rent for family of 4,1200,1
+Electricity Bill,Electric utility service,100,15
+Water Bill,Water and sewer utility,50,20
+Phone Bill,Basic cell phone plan for family,60,10
+Internet Bill,Basic home internet service,50,12
+Car Insurance,Auto insurance for one vehicle,80,5
+Health Insurance,Subsidized health coverage premium,200,1
+Student Loan,Monthly student loan repayment,100,3
+Credit Card Payment,Minimum credit card payment,50,28
+Cable TV,Basic cable television subscription,40,8
+Gym Membership,Discounted gym fee,20,7
+Streaming Service,Single streaming platform subscription,10,18
+Renters Insurance,Renters insurance policy,20,1
+Trash Service,Municipal trash collection fee,30,15
+Gas Utility,Heating gas bill,80,22
+Car Loan,Monthly car loan payment for used vehicle,150,4
+Medical Bill Installment,Installment for past medical expenses,50,25
+Home Phone Line,Landline phone service,30,9
+Library Fees,Overdue book fees (recurring estimate),5,27
+Public Transport Pass,Monthly bus pass for work,40,2
+Child Support Payment,Court-ordered child support,100,16
+Cable Modem Rental,Internet modem rental fee,10,12
+Pest Control,Basic apartment pest control service,20,19
+Laundry Service,Apartment laundry facility fee,15,23
+Storage Unit,Small storage unit rental,30,6`;
 
-        // Load default CSV on page load
+        const middleClassCsv = `title,description,amount,day
+Mortgage,Monthly home mortgage payment,2000,1
+Electricity Bill,Electric utility service,150,15
+Water Bill,Water and sewer utility,60,20
+Phone Bill,Family cell phone plan with data,120,10
+Internet Bill,High-speed home internet,80,12
+Car Insurance,Auto insurance for two vehicles,150,5
+Home Insurance,Homeowners insurance policy,100,1
+Health Insurance,Family health insurance premium,400,1
+Student Loan,Monthly student loan repayment,250,3
+Credit Card Payment,Minimum credit card payment,150,28
+Cable TV,Cable television with premium channels,90,8
+Gym Membership,Standard gym membership for family,50,7
+Streaming Services,Multiple streaming platforms (Netflix, Hulu),30,18
+Car Loan 1,Monthly car loan for primary vehicle,300,4
+Car Loan 2,Monthly car loan for secondary vehicle,250,4
+Life Insurance,Family life insurance policy,80,2
+HOA Fees,Homeowners association dues,100,15
+Property Taxes,Monthly escrow for property taxes,200,1
+Pest Control,Home pest control service,40,19
+Lawn Care,Basic lawn maintenance service,50,22
+Trash Service,Municipal trash and recycling,40,15
+Gas Utility,Natural gas for heating and cooking,100,22
+Home Security System,Monthly monitoring fee,40,11
+Dental Insurance,Family dental plan,50,1
+Vision Insurance,Vision care insurance,30,1
+Pet Insurance,Insurance for family pet,25,6
+Childcare After-School Program,After-school care fee,200,5
+Tutoring Service,Monthly tutoring for child,100,9
+Music Lessons,Weekly music lessons for child,80,13
+Cable Modem Rental,Internet equipment rental,15,12
+HVAC Maintenance,Annual HVAC service contract (monthly),20,17
+Pool Maintenance,Backyard pool cleaning service (if applicable),60,24
+Storage Unit,Medium storage unit rental,50,6
+Appliance Warranty,Extended warranty on appliances,15,26`;
+
+        const upperMiddleClassCsv = `title,description,amount,day
+Mortgage,Monthly mortgage for larger home,4000,1
+Electricity Bill,Electric utility service,250,15
+Water Bill,Water and sewer utility,80,20
+Phone Bill,Premium family cell phone plan with unlimited data,200,10
+Internet Bill,Fiber-optic high-speed internet,120,12
+Car Insurance,Auto insurance for three vehicles including luxury,300,5
+Home Insurance,Comprehensive homeowners insurance,200,1
+Health Insurance,Premium family health insurance,600,1
+Student Loan,Monthly student loan repayment,400,3
+Credit Card Payment,Minimum payment on multiple cards,300,28
+Cable TV,Premium cable with sports packages,150,8
+Gym Membership,High-end gym or fitness club membership,100,7
+Streaming Services,Bundle of streaming services (Netflix, Disney+, Amazon Prime),50,18
+Car Loan 1,Monthly loan for luxury vehicle,500,4
+Car Loan 2,Monthly loan for family SUV,400,4
+Car Loan 3,Monthly loan for teen's car,300,4
+Life Insurance,High-coverage family life insurance,150,2
+HOA Fees,Upscale community HOA dues,200,15
+Property Taxes,Monthly escrow for higher property taxes,500,1
+Pest Control,Professional home pest control,60,19
+Lawn Care,Full landscaping and lawn service,150,22
+Trash Service,Private trash and recycling pickup,60,15
+Gas Utility,Natural gas for home and appliances,150,22
+Home Security System,Advanced security system with cameras,80,11
+Dental Insurance,Comprehensive family dental plan,100,1
+Vision Insurance,Family vision care insurance,50,1
+Pet Insurance,Premium insurance for multiple pets,50,6
+Private School Tuition,Monthly tuition for one child,1000,1
+Tutoring Service,Private tutoring sessions,200,9
+Music Lessons,Private music lessons for children,150,13
+Sports Club Fees,Youth sports league membership,100,16
+Cable Modem Rental,High-end internet equipment rental,20,12
+HVAC Maintenance,Premium HVAC service contract,50,17
+Pool Maintenance,Professional pool and spa maintenance,100,24
+Storage Unit,Large climate-controlled storage,100,6
+Appliance Warranty,Extended warranties on high-end appliances,30,26
+House Cleaning Service,Bi-weekly cleaning service,200,25
+Financial Advisor Fee,Monthly financial planning service,150,8
+Investment Account Fee,Brokerage account maintenance,50,14
+Country Club Membership,Monthly club dues,300,3
+Travel Insurance,Annual travel policy (monthly equivalent),40,21
+Boat Insurance,Insurance for recreational boat,100,7
+Second Home HOA,Fees for vacation property,150,15
+Art Lessons,Private art classes for family,100,27
+Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
+
+        // Load default (middle class) on page load
         window.onload = function() {
+            const defaultCsv = middleClassCsv;
             calculateAndDisplay(parseCSV(defaultCsv));
         };
 
+        // Dropdown change event
+        document.getElementById('budget-select').addEventListener('change', function() {
+            const selected = this.value;
+            let csv;
+            if (selected === 'low') {
+                csv = lowIncomeCsv;
+            } else if (selected === 'middle') {
+                csv = middleClassCsv;
+            } else if (selected === 'upper') {
+                csv = upperMiddleClassCsv;
+            }
+            if (csv) {
+                calculateAndDisplay(parseCSV(csv));
+            }
+        });
+
+        // File upload event
         document.getElementById('file-input').addEventListener('change', handleFileUpload);
 
         function handleFileUpload(event) {
@@ -168,9 +293,7 @@ Streaming Services,Netflix and other subscriptions,30,18`;
 
                 let dueDate = new Date(dueYear, dueMonth, bill.day);
 
-                // Handle if day overflows (e.g., Feb 30 -> Mar 2), but for simplicity, we let JS handle it
-
-                if (dueDate < nextPayDate && dueDate > now) {  // Ensure it's future and before next pay
+                if (dueDate < nextPayDate && dueDate > now) {
                     total += bill.amount;
                     includedBills.push(bill);
                 }
@@ -180,11 +303,9 @@ Streaming Services,Netflix and other subscriptions,30,18`;
         }
 
         function displayResults(currentDate, nextPayDate, total, includedBills) {
-            // Update header text
             document.getElementById('header-text').textContent = 
                 `Today is ${currentDate.toDateString()} and you will need to leave $${total.toFixed(2)} in your account before your next paycheck on ${nextPayDate.toDateString()}.`;
 
-            // Update result section
             document.getElementById('next-payday').textContent = nextPayDate.toDateString();
             document.getElementById('total-amount').textContent = total.toFixed(2);
 
