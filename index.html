@@ -22,6 +22,22 @@
             margin-bottom: 20px;
             color: #555;
         }
+        #date-control {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #date-control button {
+            padding: 8px 12px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        #date-control button:hover {
+            background-color: #0056b3;
+        }
         #upload-section {
             text-align: center;
             margin-bottom: 20px;
@@ -67,6 +83,10 @@
 <body>
     <h1>Payday Planner</h1>
     <p id="header-text"></p>
+    <div id="date-control">
+        <button onclick="changeDate(-1)">Previous Day</button>
+        <button onclick="changeDate(1)">Next Day</button>
+    </div>
     <div id="upload-section">
         <label for="budget-select">Select a sample budget:</label><br>
         <select id="budget-select">
@@ -196,26 +216,25 @@ Second Home HOA,Fees for vacation property,150,15
 Art Lessons,Private art classes for family,100,27
 Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
 
-        // Load default (middle class) on page load
+        let currentDate = new Date(); // Initialize with current date
+        let currentCsv = middleClassCsv; // Default to middle class
+
+        // Load default budget on page load
         window.onload = function() {
-            const defaultCsv = middleClassCsv;
-            calculateAndDisplay(parseCSV(defaultCsv));
+            calculateAndDisplay(parseCSV(currentCsv));
         };
 
         // Dropdown change event
         document.getElementById('budget-select').addEventListener('change', function() {
             const selected = this.value;
-            let csv;
             if (selected === 'low') {
-                csv = lowIncomeCsv;
+                currentCsv = lowIncomeCsv;
             } else if (selected === 'middle') {
-                csv = middleClassCsv;
+                currentCsv = middleClassCsv;
             } else if (selected === 'upper') {
-                csv = upperMiddleClassCsv;
+                currentCsv = upperMiddleClassCsv;
             }
-            if (csv) {
-                calculateAndDisplay(parseCSV(csv));
-            }
+            calculateAndDisplay(parseCSV(currentCsv));
         });
 
         // File upload event
@@ -227,10 +246,16 @@ Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const csvText = e.target.result;
-                calculateAndDisplay(parseCSV(csvText));
+                currentCsv = e.target.result;
+                calculateAndDisplay(parseCSV(currentCsv));
             };
             reader.readAsText(file);
+        }
+
+        // Date change function for forward/backward buttons
+        function changeDate(days) {
+            currentDate.setDate(currentDate.getDate() + days);
+            calculateAndDisplay(parseCSV(currentCsv));
         }
 
         function parseCSV(csvText) {
@@ -258,7 +283,7 @@ Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
         }
 
         function calculateAndDisplay(bills) {
-            const now = new Date();
+            const now = new Date(currentDate); // Use adjustable currentDate
             const currentDay = now.getDate();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
