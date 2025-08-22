@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Until Next Payday</title>
+    <title>Payday Planner</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,6 +15,12 @@
         h1 {
             text-align: center;
             color: #333;
+        }
+        #header-text {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #555;
         }
         #upload-section {
             text-align: center;
@@ -54,9 +60,10 @@
     </style>
 </head>
 <body>
-    <h1>Budget Until Next Payday</h1>
+    <h1>Payday Planner</h1>
+    <p id="header-text"></p>
     <div id="upload-section">
-        <label for="file-input">Upload your CSV file:</label><br>
+        <label for="file-input">Upload a different CSV file (defaults to sample budget):</label><br>
         <input type="file" id="file-input" accept=".csv">
     </div>
     <div id="result" style="display: none;">
@@ -67,6 +74,26 @@
     </div>
 
     <script>
+        // Default CSV content (kjk.csv equivalent)
+        const defaultCsv = `title,description,amount,day
+Rent,Monthly apartment rent,1500,1
+Home Insurance,Homeowners insurance,120,5
+Car Insurance,Auto insurance premium,100,15
+Phone Bill,Cell phone service,80,10
+Internet Bill,Home internet service,60,12
+Electricity Bill,Electric utility,150,20
+Water Bill,Water and sewer utility,50,25
+Cable TV,Cable television subscription,90,8
+Credit Card Payment,Minimum credit card payment,200,28
+Student Loan,Monthly student loan payment,300,3
+Gym Membership,Gym membership fee,40,7
+Streaming Services,Netflix and other subscriptions,30,18`;
+
+        // Load default CSV on page load
+        window.onload = function() {
+            calculateAndDisplay(parseCSV(defaultCsv));
+        };
+
         document.getElementById('file-input').addEventListener('change', handleFileUpload);
 
         function handleFileUpload(event) {
@@ -76,8 +103,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const csvText = e.target.result;
-                const bills = parseCSV(csvText);
-                calculateAndDisplay(bills);
+                calculateAndDisplay(parseCSV(csvText));
             };
             reader.readAsText(file);
         }
@@ -150,10 +176,15 @@
                 }
             });
 
-            displayResults(nextPayDate, total, includedBills);
+            displayResults(now, nextPayDate, total, includedBills);
         }
 
-        function displayResults(nextPayDate, total, includedBills) {
+        function displayResults(currentDate, nextPayDate, total, includedBills) {
+            // Update header text
+            document.getElementById('header-text').textContent = 
+                `Today is ${currentDate.toDateString()} and you will need to leave $${total.toFixed(2)} in your account before your next paycheck on ${nextPayDate.toDateString()}.`;
+
+            // Update result section
             document.getElementById('next-payday').textContent = nextPayDate.toDateString();
             document.getElementById('total-amount').textContent = total.toFixed(2);
 
