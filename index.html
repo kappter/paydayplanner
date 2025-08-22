@@ -50,6 +50,14 @@
         #file-input {
             margin: 10px 0;
         }
+        #csv-instructions {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+        }
         #result {
             background-color: white;
             padding: 20px;
@@ -94,6 +102,7 @@
             <option value="middle" selected>Middle-Class Family Sample</option>
             <option value="upper">Upper Middle-Class Family Sample</option>
         </select><br>
+        <p id="csv-instructions">Your CSV file must have the columns: <strong>title</strong> (bill name), <strong>description</strong> (bill details), <strong>amount</strong> (numeric cost), and <strong>day</strong> (day of the month, 1–31).</p>
         <label for="file-input">Or upload your own CSV file:</label><br>
         <input type="file" id="file-input" accept=".csv">
     </div>
@@ -261,6 +270,10 @@ Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
         function parseCSV(csvText) {
             const lines = csvText.trim().split('\n');
             const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            if (!headers.includes('title') || !headers.includes('description') || !headers.includes('amount') || !headers.includes('day')) {
+                alert('CSV must contain columns: title, description, amount, day');
+                return [];
+            }
             const bills = [];
 
             for (let i = 1; i < lines.length; i++) {
