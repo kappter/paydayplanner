@@ -64,7 +64,7 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        #total-amount {
+        #total-amount, #total-monthly {
             font-size: 24px;
             font-weight: bold;
             color: #007bff;
@@ -81,6 +81,10 @@
         }
         .bill-title {
             font-weight: bold;
+        }
+        .bill-day {
+            color: #555;
+            margin-right: 5px;
         }
         .bill-amount {
             float: right;
@@ -109,6 +113,7 @@
     <div id="result" style="display: none;">
         <p>Next payday: <span id="next-payday"></span></p>
         <p>Total amount required until next payday: $<span id="total-amount"></span></p>
+        <p>Total monthly expenses: $<span id="total-monthly"></span></p>
         <h2>Included Bills:</h2>
         <ul id="included-bills"></ul>
     </div>
@@ -135,7 +140,8 @@ Electricity Bill,Electric utility,55,20
 Amazon,AMAZON PRIME,16.23,23
 TV,PAYPAL HULU INST XFER WEB (S),41.11,25
 Car Insurance,PROG CLASSIC INS PREM WEB (R),48.09,28
-YouTube,YOUTUBEPREMIUM 650,29.94,29`;
+YouTube,YOUTUBEPREMIUM 650,29.94,29
+`;
 
         const middleClassCsv = `title,description,amount,day
 Mortgage,Monthly home mortgage payment,2000,1
@@ -332,15 +338,19 @@ Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
                 }
             });
 
-            displayResults(now, nextPayDate, total, includedBills);
+            // Calculate total monthly expenses
+            const totalMonthly = bills.reduce((sum, bill) => sum + bill.amount, 0);
+
+            displayResults(now, nextPayDate, total, totalMonthly, includedBills);
         }
 
-        function displayResults(currentDate, nextPayDate, total, includedBills) {
+        function displayResults(currentDate, nextPayDate, total, totalMonthly, includedBills) {
             document.getElementById('header-text').textContent = 
                 `Today is ${currentDate.toDateString()} and you will need to leave $${total.toFixed(2)} in your account before your next paycheck on ${nextPayDate.toDateString()}.`;
 
             document.getElementById('next-payday').textContent = nextPayDate.toDateString();
             document.getElementById('total-amount').textContent = total.toFixed(2);
+            document.getElementById('total-monthly').textContent = totalMonthly.toFixed(2);
 
             const list = document.getElementById('included-bills');
             list.innerHTML = '';
@@ -348,6 +358,7 @@ Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <span class="bill-title">${bill.title}</span>
+                    <span class="bill-day">${bill.day}</span>
                     <span class="bill-description"> - ${bill.description}</span>
                     <span class="bill-amount">$${bill.amount.toFixed(2)}</span>
                 `;
@@ -359,4 +370,3 @@ Yoga Studio Membership,Specialty yoga or wellness membership,80,23`;
     </script>
 </body>
 </html>
-
