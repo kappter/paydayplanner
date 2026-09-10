@@ -1,44 +1,49 @@
-# Payday Planner
+# Payday Planner v2
 
-## Overview
-Payday Planner is a simple web app that helps you manage your monthly bills by calculating the total amount needed in your checking account until your next payday (assumed to be the 1st or 15th of each month). Upload a CSV file with your bills, and the app will display the next payday, the total amount required for bills due before then, and a detailed list of those bills.
+Payday Planner answers one narrow question: **how much of the currently available checking balance is already spoken for before the next paycheck?**
 
-## Features
-- **CSV Upload**: Upload a CSV file containing your bills with columns for title, description, amount, and due date (day of the month).
-- **Payday Calculation**: Automatically determines the next payday (1st or 15th) based on the current date.
-- **Bill Filtering**: Shows only the bills due between now and the next payday, excluding bills due today or on the payday itself.
-- **Clean Interface**: Displays the total amount needed and a list of relevant bills with titles, descriptions, and amounts.
+## Source-of-truth contract
 
-## Sample CSV Format
-Your CSV file should have the following columns: `title`, `description`, `amount`, `day`. Here's an example (`sample_budget.csv`):
+- `kjk.csv` is the single recurring-bill source. The web page loads it directly; bills are not duplicated inside JavaScript.
+- The current available balance is entered deliberately and stored only in the browser with a verification timestamp. It is never committed to this public repository.
+- Paid/unpaid marks are stored only in the browser.
+- The planner calculates the next paycheck, unpaid listed bills before that paycheck, and the amount safe after those bills.
+- The Daily Briefing should consume a verified snapshot; it should not independently maintain the bill list or imply that a stale balance is live.
 
-```
+## Daily Briefing snapshot contract
+
+The compact snapshot contains:
+
+1. `AVAILABLE_BALANCE`
+2. `BALANCE_VERIFIED_AT`
+3. `REQUIRED_UNTIL_PAYDAY`
+4. `SAFE_AFTER_LISTED_BILLS`
+5. `NEXT_PAYDAY`
+6. `FRESHNESS` (`FRESH`, `STALE`, or `UNVERIFIED`)
+
+Recommended briefing behavior:
+
+- `FRESH`: show available, needed, and safe amounts.
+- `STALE`: hide the apparent safe-to-spend conclusion and request a refresh.
+- `UNVERIFIED`: show no balance-derived conclusion.
+- Never scrape a banking website as part of the report build. Authentication, MFA, delayed posting, and changing markup make that unsuitable for a dependable morning workflow.
+
+## Realistic routine
+
+1. Open the bank and enter the **available** balance in Payday Planner.
+2. Mark any listed bill due today as paid only after it has actually cleared or been intentionally covered.
+3. Copy the three-line Briefing snapshot into the private Briefing finance input.
+4. Refresh `kjk.csv` when a recurring amount or due day changes—not every morning.
+
+The unavoidable bookkeeping is one verified balance entry. Everything else is calculated from the bill file and explicit paid marks.
+
+## Bill CSV
+
+Required columns:
+
+```csv
 title,description,amount,day
-Rent,Monthly apartment rent,1500,1
-Home Insurance,Homeowners insurance,120,5
-Car Insurance,Auto insurance premium,100,15
-Phone Bill,Cell phone service,80,10
-Internet Bill,Home internet service,60,12
-Electricity Bill,Electric utility,150,20
-Water Bill,Water and sewer utility,50,25
-Cable TV,Cable television subscription,90,8
-Credit Card Payment,Minimum credit card payment,200,28
-Student Loan,Monthly student loan payment,300,3
-Gym Membership,Gym membership fee,40,7
-Streaming Services,Netflix and other subscriptions,30,18
+Spotify,Monthly subscription,21.64,14
 ```
 
-## How to Use
-1. Save the app's HTML code as `payday_planner.html`.
-2. Open it in a web browser.
-3. Upload your CSV file (or use the sample provided above).
-4. View the next payday, total amount needed, and a list of bills due before the next payday.
-
-## Notes
-- The app assumes bills due on or after today are considered for the next due date but excludes today's bills (assuming they've been paid).
-- Bills due on the exact payday date are excluded, assuming your paycheck arrives before any debits.
-- The app does not handle local file I/O beyond CSV upload or network calls, keeping it lightweight and browser-based.
-- For precise handling of edge cases (e.g., February 30th or month-end overflows), contact the developer for enhancements.
-
-## Developer
-Created with ❤️ by Grok, powered by xAI.
+`day` is the recurring calendar day from 1–31. For shorter months, the planner uses that month’s last valid day.
