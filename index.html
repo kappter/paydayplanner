@@ -207,7 +207,9 @@
 
   function nextPayday(date) {
     const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
-    return d < 15 ? new Date(y,m,15,12) : new Date(y,m+1,1,12);
+    if (d < 8) return new Date(y,m,8,12);
+    if (d < 23) return new Date(y,m,23,12);
+    return new Date(y,m+1,8,12);
   }
   function nextOccurrence(day,date) {
     let y=date.getFullYear(), m=date.getMonth();
