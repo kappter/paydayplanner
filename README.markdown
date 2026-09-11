@@ -1,6 +1,6 @@
 # Payday Planner v2
 
-Payday Planner answers one narrow question: **how much of the currently available checking balance is already spoken for before the next paycheck?**
+Payday Planner answers one narrow question: **how much of the currently available checking balance is already spoken for before the next paycheck?**\n\nThe configured paycheck cadence is the **8th and 23rd of each month**. Bills due on the paycheck date are excluded because the paycheck is assumed to arrive before scheduled debits.
 
 ## Source-of-truth contract
 
